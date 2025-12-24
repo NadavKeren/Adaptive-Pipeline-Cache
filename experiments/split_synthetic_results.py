@@ -30,6 +30,8 @@ def split_results_dump(input_file: Path, output_dir: Path = None) -> Dict[str, P
     else:
         output_dir.mkdir(exist_ok=True, parents=True)
 
+    print(f'[bold cyan]Splitting {input_file} into traffic types in {output_dir}')
+
     base_name = input_file.stem
     recency_output = output_dir / f'{base_name}_recency.results_dump'
     frequency_output = output_dir / f'{base_name}_frequency.results_dump'
@@ -39,6 +41,7 @@ def split_results_dump(input_file: Path, output_dir: Path = None) -> Dict[str, P
     frequency_count = 0
     burstiness_count = 0
     other_count = 0
+    row_count = 0
 
     with input_file.open('r') as input_f, \
          recency_output.open('w') as recency_f, \
@@ -46,11 +49,12 @@ def split_results_dump(input_file: Path, output_dir: Path = None) -> Dict[str, P
          burstiness_output.open('w') as burstiness_f:
 
         for line in input_f:
+            row_count += 1
             parts = line.split()
-            if len(parts) != 3:
+            if len(parts) != 4:
                 continue
 
-            timestamp, key, result = parts
+            timestamp, key, miss_penalty, result = parts
             key = int(key)
 
             if recency_start <= key < recency_end:
@@ -69,7 +73,7 @@ def split_results_dump(input_file: Path, output_dir: Path = None) -> Dict[str, P
     print(f'  RECENCY entries: {recency_count:,}')
     print(f'  FREQUENCY entries: {frequency_count:,}')
     print(f'  BURSTINESS entries: {burstiness_count:,}')
-    print(f'  OTHER entries (skipped): {other_count:,}')
+    print(f'  ONE HIT WONDERS entries (skipped): {other_count:,}')
 
     print(f'\n[bold cyan]Output files:')
     print(f'  {recency_output}')

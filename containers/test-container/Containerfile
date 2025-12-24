@@ -4,7 +4,7 @@ WORKDIR "/home"
 RUN git clone https://github.com/NadavKeren/caffeine.git
 RUN git clone https://github.com/NadavKeren/NSDI-Pipeline-Cache.git /home/artifact
 WORKDIR "/home/caffeine"
-RUN git checkout NSDI
+RUN git checkout adaptive-pipeline-v1
 
 RUN pip install xxhash
 

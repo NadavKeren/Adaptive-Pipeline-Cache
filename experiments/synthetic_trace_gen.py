@@ -70,7 +70,7 @@ def create_recency_item(rng: np.random.Generator, item_num: int, latency: int, s
         arr.append((curr_time, item_num, 0, latency))
         curr_time += time
     
-    arr.append((curr_time, item_num, 0, latency))
+    arr.append((curr_time, item_num, latency))
     
     return arr
 
@@ -80,7 +80,7 @@ def create_frequency_item(rng: np.random.Generator, item_num: int, latency: int)
     curr_time = random.randint(FREQ_CONF['MIN_FIRST_OCCUR_TIME'], FREQ_CONF['MAX_FIRST_OCCUR_TIME'])
     
     while curr_time < TICK_TIME * TOTAL_TICKS:
-        arr.append((curr_time, item_num, 0, latency))
+        arr.append((curr_time, item_num, latency))
         curr_time += random.randint(FREQ_CONF['MIN_TIME_BETWEEN_REQ'], FREQ_CONF['MAX_TIME_BETWEEN_REQ'])
 
     return arr
@@ -99,7 +99,7 @@ def create_burstiness_item(rng: np.random.Generator, item_num: int, latency: int
     for burst in range(num_bursts):
         num_of_reqs_in_burst = random.randint(BURST_CONF['MIN_LEN'], BURST_CONF['MAX_LEN'])
         for ms in range(num_of_reqs_in_burst):
-            arr.append((curr_time, item_num, 0, latency))
+            arr.append((curr_time, item_num, latency))
             curr_time += 1
         
         curr_time += time_between_bursts
@@ -198,7 +198,7 @@ def gen_trace(rng : np.random.Generator) -> None:
         count_burst += len(op)
 
     for i in range(TRACE_CONF['one_hit_wonders']):
-        op = (random.randint(0, TOTAL_TICKS * TICK_TIME), count, 0, LATENCY)
+        op = (random.randint(0, TOTAL_TICKS * TICK_TIME), count, LATENCY)
         arr.append(op)
         count += 1
         
@@ -209,7 +209,7 @@ def gen_trace(rng : np.random.Generator) -> None:
     output_path = Path('synthetic.trace')
     with output_path.open('w') as output_file:
         for row in arr:
-            output_file.write(f'{row[0]} {row[1]} {row[2]} {row[3]}\n')
+            output_file.write(f'{row[0]} {row[1]} {row[2]}\n')
 
 
 def main():

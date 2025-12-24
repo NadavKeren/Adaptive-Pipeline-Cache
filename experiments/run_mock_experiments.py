@@ -24,23 +24,6 @@ RESULTS_DIR = local_conf['results'] if local_conf['results'] != '' else './resul
 pretty.install()
 console = Console()
 
-SIZES = {
-    'trace010': 2 ** 9,
-    'trace024': 2 ** 9,
-    'trace031': 2 ** 16,
-    'trace045': 2 ** 12,
-    'trace034': 2 ** 14,
-    'trace029': 2 ** 9,
-    'trace012': 2 ** 10,
-    'twitter01': 2 ** 10,
-    'twitter03': 2 ** 10,
-    'twitter09': 2 ** 12,
-    'twitter28': 2 ** 12,
-    'metakv4': 2 ** 13,
-    'metakv2': 2 ** 13
-}
-
-
 def get_trace_name(input_file: Path):
     stem = input_file.stem.lower()
 
@@ -103,7 +86,7 @@ def main():
         description='Run mock policy experiments on marked traces (traces with LHD/LRB predictions)'
     )
 
-    parser.add_argument('--input', help='Path to marked trace file', required=True, type=str)
+    parser.add_argument('--input', help='Trace filename (not full path)', required=True, type=str)
     parser.add_argument('--trace-name', help='Name of the trace (overrides auto-detection)', required=False, type=str)
     parser.add_argument('--cache-size', help='Cache size in entries (overrides default)', required=False, type=int)
     parser.add_argument('--trace-folder', help='Trace folder within resources directory', required=False, type=str, default='latency')
@@ -113,24 +96,20 @@ def main():
 
     console.print(f'[bold]Running mock experiments with args:[/bold]\n{args}')
 
-    input_file = Path(args.input)
+    input_filename = args.input
+    trace_file_path = Path(resources) / args.trace_folder / input_filename
 
-    if not input_file.exists():
-        console.print(f'[bold red]Error: Input file does not exist: {input_file}')
+    if not trace_file_path.exists():
+        console.print(f'[bold red]Error: Trace file does not exist: {trace_file_path}')
         exit(1)
 
-    trace_name = args.trace_name if args.trace_name else get_trace_name(input_file)
-    cache_size = args.cache_size if args.cache_size else SIZES.get(trace_name)
-
-    if cache_size is None:
-        console.print(f'[bold red]Error: Cannot determine cache size for trace: {trace_name}')
-        console.print(f'[yellow]Please specify --cache-size or use a known trace name')
-        console.print(f'[yellow]Known traces: {list(SIZES.keys())}')
-        exit(1)
+    trace_name = args.trace_name if args.trace_name else get_trace_name(Path(input_filename))
+    cache_size = 1024 # not relevant for mock
 
     console.print(f'[bold cyan]Trace name: {trace_name}')
     console.print(f'[bold cyan]Cache size: {cache_size}')
     console.print(f'[bold cyan]Trace folder: {args.trace_folder}')
+    console.print(f'[bold cyan]Full trace path: {trace_file_path}')
 
     dump_path = Path(caffeine_root)
     console.print(f'[bold yellow]Cleaning up temporary CSV files in {dump_path}')
@@ -139,7 +118,7 @@ def main():
         csv_file.unlink()
         console.print(f'[dim]Removed {csv_file.name}')
 
-    run_mock(input_file.name, trace_name, cache_size, args.trace_folder, args.algorithm_name)
+    run_mock(input_filename, trace_name, cache_size, args.trace_folder, args.algorithm_name)
 
     console.print(f'[bold green]Completed successfully!')
 

@@ -73,10 +73,10 @@ def run_pipeline_experiment(trace_file: str, cache_size: int, algorithm_name: st
     settings = {**config, 'pipeline.quantum-size': quantum_size}
 
     single_run_result = simulatools.single_run(
-        'pipeline',
+        'sampled_ghost',
         trace_file=trace_file,
         trace_folder=TRACE_FOLDER,
-        trace_format='LATENCY_RESULT',
+        trace_format='LATENCY',
         size=cache_size,
         additional_settings=settings,
         name=f'{algorithm_name}-synthetic',
@@ -174,7 +174,7 @@ def generate_results_table(results: list) -> None:
             })
 
     df = pd.DataFrame(csv_data)
-    csv_path = RESULTS_DIR / 'synthetic_3x3_results.csv'
+    csv_path = RESULTS_DIR / 'synthetic_splitted_results.csv'
     df.to_csv(csv_path, index=False)
     console.print(f'[bold green]Results saved to: {csv_path}')
 
@@ -186,6 +186,7 @@ def main():
 
     parser.add_argument('--cache-size', help='Cache size in entries', required=True, type=int)
     parser.add_argument('--seed', help='Random seed for trace generation', type=int, required=False)
+    parser.add_argument('--skip-trace-gen', help='Skip trace generation and use existing trace', action='store_true', required=False)
 
     args = parser.parse_args()
 
@@ -196,15 +197,25 @@ def main():
     trace_folder_path = Path(resources) / TRACE_FOLDER
     trace_folder_path.mkdir(parents=True, exist_ok=True)
 
-    seed = args.seed if args.seed is not None else random.randint(1_000_000, 9_999_999)
-    console.print(f'[bold cyan]Generating synthetic trace with seed: {seed:,}')
-
-    rng = np.random.default_rng(seed=seed)
-    random.seed(seed)
-    gen_trace(rng)
-
     trace_file = 'synthetic.trace'
-    console.print(f'[bold green]Synthetic trace generated: {trace_file}')
+    target_trace = trace_folder_path / trace_file
+
+    if args.skip_trace_gen:
+        console.print(f'[bold yellow]Skipping trace generation, using existing trace at: {target_trace}')
+        if not target_trace.exists():
+            console.print(f'[bold red]Error: Trace file not found at {target_trace}')
+            exit(1)
+    else:
+        seed = args.seed if args.seed is not None else random.randint(1_000_000, 9_999_999)
+        console.print(f'[bold cyan]Generating synthetic trace with seed: {seed:,}')
+
+        rng = np.random.default_rng(seed=seed)
+        random.seed(seed)
+        gen_trace(rng)
+
+        source_trace = Path(trace_file)
+        source_trace.rename(target_trace)
+        console.print(f'[bold green]Synthetic trace generated and moved to: {target_trace}')
 
     console.print(f'[bold yellow]Cleaning up temporary files in {caffeine_root}')
     for csv_file in caffeine_root.rglob('*.csv'):
@@ -222,13 +233,19 @@ def main():
     dump_files = {}
 
     for algo_name, config in experiments:
-        dump_path = run_pipeline_experiment(
-            trace_file,
-            args.cache_size,
-            algo_name,
-            config
-        )
-        dump_files[algo_name] = dump_path
+        expected_dump = RESULTS_DIR / f'{algo_name}-synthetic.results_dump'
+
+        if expected_dump.exists():
+            console.print(f'[bold yellow]Skipping {algo_name} experiment, dump file already exists: {expected_dump}')
+            dump_files[algo_name] = expected_dump
+        else:
+            dump_path = run_pipeline_experiment(
+                trace_file,
+                args.cache_size,
+                algo_name,
+                config
+            )
+            dump_files[algo_name] = dump_path
 
     console.print('\n[bold magenta]Splitting results dumps by traffic type...')
 
@@ -252,6 +269,7 @@ def main():
     for algo_name in ['LRU', 'LFU', 'LBU']:
         for trace_type in ['recency', 'frequency', 'burstiness']:
             split_file = split_files[algo_name][trace_type]
+            console.print(f'\n[bold cyan]Running mock for split: {split_file}')
             result = run_mock_on_split(
                 split_file,
                 args.cache_size,

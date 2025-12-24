@@ -6,17 +6,17 @@ import shutil
 from pathlib import Path
 
 SIZES = {
-    'trace010': 2 ** 9,
-    'trace024': 2 ** 9,
-    'trace031': 2 ** 16,
-    'trace045': 2 ** 12,
-    'trace034': 2 ** 14,
-    'trace029': 2 ** 9,
-    'trace012': 2 ** 10,
-    'twitter-cluster1': 2 ** 10,
-    'twitter-cluster3': 2 ** 10,
-    'twitter-cluster9': 2 ** 12,
-    'twitter-cluster28': 2 ** 12,
+    'ibm010': 2 ** 9,
+    'ibm024': 2 ** 9,
+    'ibm031': 2 ** 16,
+    'ibm045': 2 ** 12,
+    'ibm034': 2 ** 14,
+    'ibm029': 2 ** 9,
+    'ibm012': 2 ** 10,
+    'twitter1': 2 ** 10,
+    'twitter3': 2 ** 10,
+    'twitter9': 2 ** 12,
+    'twitter28': 2 ** 12,
     'metakv4': 2 ** 13,
     'metakv2': 2 ** 13
 }
@@ -64,14 +64,18 @@ def run_lhd(config_path, trace_name):
     print(f"Running LHD for {trace_name}...")
     subprocess.run(['/home/LHD/bin/cache', str(config_path)], check=True)
 
-    dump_files = list(Path('/home').glob('LHD-*.dump'))
+    dump_files = list(Path('/home').glob('LHD_*.dump'))
+    print(f"Found {len(dump_files)} LHD dump files in /home")
     if dump_files:
         for dump_file in dump_files:
             dest = Path('/home/results') / f'LHD-{trace_name}.dump'
+            print(f"Moving LHD dump from {dump_file} to {dest}")
             shutil.move(str(dump_file), str(dest))
             print(f"Moved LHD dump file to {dest}")
+    else:
+        print("Warning: No LHD dump files found to move")
 
-def run_lrb(trace_filename, trace_name, cache_size):
+def run_lrb(trace_filename, trace_name, cache_size, trace_dir):
     print(f"Running LRB for {trace_name}...")
     subprocess.run([
         '/home/LRB/build/bin/webcachesim_cli',
@@ -80,12 +84,12 @@ def run_lrb(trace_filename, trace_name, cache_size):
         str(cache_size)
     ], check=True)
 
-    dump_files = list(Path('/home').glob('LRB-*.dump'))
+    dump_files = list(trace_dir.glob('LRB-*.dump'))
     if dump_files:
         for dump_file in dump_files:
             dest = Path('/home/results') / f'LRB-{trace_name}.dump'
             shutil.move(str(dump_file), str(dest))
-            print(f"Moved LRB dump file to {dest}")
+            print(f"Moved LRB dump file from {dump_file} to {dest}")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -120,7 +124,7 @@ def main():
 
     run_lhd(config_path, trace_name)
 
-    run_lrb(trace_file.name, trace_name, cache_size)
+    run_lrb(trace_file.name, trace_name, cache_size, trace_path.parent)
 
     config_path.unlink()
 
