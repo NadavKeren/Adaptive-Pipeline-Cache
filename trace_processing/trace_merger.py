@@ -34,7 +34,7 @@ class TimesAction(argparse.Action):
 
 def get_trace_name(fname: str):
     temp_fname = fname.lower()
-    name = re.findall('trace0[0-9][0-9]', temp_fname)
+    name = re.findall('ibm0[0-9][0-9]', temp_fname)
     
     return name[0]
 

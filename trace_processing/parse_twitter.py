@@ -113,6 +113,8 @@ def main():
 
     process_csv_batches(input_file, output_file, args.batch_size)
 
+    print(f'[green]Done processing: [purple]{input_file.name} -> [cyan]{output_filename}')
+
 
 if __name__ == "__main__":
     main()

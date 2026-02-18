@@ -230,6 +230,8 @@ def main():
 
             progress.remove_task(gen_progress)
             progress.update(file_progress, advance=1)
+
+    print(f'[green]Done appending times to [cyan]{len(input_files_paths)}[green] files')
             
 
  

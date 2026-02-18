@@ -117,9 +117,9 @@ def get_trace_name(input_file: Path):
     if input_file.stem.startswith("twitter-cluster"):
         match = re.match(r'^(twitter-cluster\d+)', input_file.stem)
         trace_name = match.group(1)
-    elif input_file.stem.startswith("IBM"):
+    elif input_file.stem.startswith("ibm"):
         temp_fname = input_file.stem.lower()
-        name = re.findall('trace0[0-9][0-9]', temp_fname)
+        name = re.findall('ibm0[0-9][0-9]', temp_fname)
         trace_name = name[0]
     
     return trace_name
@@ -172,6 +172,7 @@ def run_test(fname: str, trace_name: str, cache_size: int, output_filename : str
         if additional_csv_data is not None:
             for key, value in additional_csv_data.items():
                 single_run_result[key] = value
+        
         
         single_run_result.to_csv(f'{RESULTS_DIR}/{output_filename}.csv')
         if progress_console:

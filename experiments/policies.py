@@ -21,7 +21,6 @@ class Policy(Enum):
     sieve = 'linked.Sieve'
     
     
-    ca_arc = "adaptive.CA-Arc"
     hyperbolic = "sampled.Hyperbolic"
     gdwheel = "greedy-dual.GDWheel"
     yan_li = 'latency-aware.YanLi'

@@ -280,7 +280,7 @@ def main():
 
     generate_results_table(all_results)
 
-    console.print('[bold green]All experiments completed successfully!')
+    console.print('[bold green]Done')
 
 
 if __name__ == '__main__':
